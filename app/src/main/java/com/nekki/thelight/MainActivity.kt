@@ -3,26 +3,28 @@ package com.nekki.thelight
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
-import android.widget.ArrayAdapter
-import android.widget.Spinner
-import android.widget.TextView
+import android.view.View
+import android.widget.*
 import kotlinx.coroutines.*
+import org.json.JSONObject
 import org.jsoup.HttpStatusException
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 
 class MainActivity : AppCompatActivity() {
-    private lateinit var textViewTest: TextView
     private lateinit var mainh: TextView
+    private lateinit var autoCompleteStreetText: AutoCompleteTextView
 
     private val job = Job()
     private val coroutineScope = CoroutineScope(Dispatchers.Main + job)
-
+    private val streetsListKyiv = mutableListOf<String>()
+    private val streetsListDnipro = mutableListOf<String>()
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        textViewTest = findViewById(R.id.MainTextTest)
-        mainh = findViewById(R.id.h1)
+        mainh = findViewById(R.id.h1MainText)
+        autoCompleteStreetText = findViewById(R.id.autoStreetText)
+
         val regionSpinner = findViewById<Spinner>(R.id.regionSpinner)
         val adapter = ArrayAdapter.createFromResource(
             this,
@@ -34,12 +36,36 @@ class MainActivity : AppCompatActivity() {
         coroutineScope.launch {
             getWeb()
         }
+
+        regionSpinner.setOnItemSelectedListener(object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(parent: AdapterView<*>, view: View, position: Int, id: Long) {
+                when (position) {
+                    0 -> updateAutoCompleteTextView(streetsListKyiv)
+                    1 -> updateAutoCompleteTextView(streetsListDnipro)
+                }
+            }
+
+            override fun onNothingSelected(parent: AdapterView<*>) {
+                // Do nothing
+            }
+        })
+    }
+
+    private fun updateAutoCompleteTextView(streetsList: List<String>) {
+        val streetAdapter = ArrayAdapter(
+            this,
+            android.R.layout.simple_dropdown_item_1line,
+            streetsList
+        )
+        autoCompleteStreetText.setAdapter(streetAdapter)
     }
 
     private suspend fun getWeb() {
         try {
             val doc: Document = withContext(Dispatchers.IO) {
-                Jsoup.connect("https://kyiv.yasno.com.ua/schedule-turn-off-electricity").get()
+                Jsoup.connect("https://www.dtek-kem.com.ua/ua/shutdowns")
+                    .userAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3")
+                    .get()
             }
             //Вулиці Києва
             val urlStreetsKyiv = "https://locator.ua/ua/list/kyiv/streets/n1/"
@@ -53,7 +79,7 @@ class MainActivity : AppCompatActivity() {
                 val streetColumnKyiv = row.select("td:nth-child(1)")
                 if (streetColumnKyiv.isNotEmpty()) {
                     val streetName = streetColumnKyiv.text()
-                    streetsListKyiv.add(streetName)
+                    this.streetsListKyiv.add(streetName)
                 }
             }
 
@@ -71,25 +97,24 @@ class MainActivity : AppCompatActivity() {
                 val streetColumnDnipro = row.select("td:nth-child(1)")
                 if (streetColumnDnipro.isNotEmpty()) {
                     val streetName = streetColumnDnipro.text()
-                    streetsListDnipro.add(streetName)
+                    this.streetsListDnipro.add(streetName)
                 }
+
             }
             Log.d("Streets Dnipro List", streetsListDnipro.toString())
 
-
-
-
-
-            val text = doc.title()
+            val headerJson = doc.select("script[type=application/json]").first()?.data()
+            val headerElement = JSONObject(headerJson).getJSONArray("pageProps").getJSONObject(0).getString("title")
             withContext(Dispatchers.Main) {
-                mainh.text = text
+                mainh.text = headerElement
             }
 
-            Log.d("MainActivity", "Title: $text")
+
+            Log.d("MainActivity", "Title: $headerElement")
         } catch (e: Exception) {
             when (e) {
                 is CancellationException -> {
-                    Log.e("MainActivity", "Task was cancelled", e)
+                    Log.e("MainActivity", "Відміна завантаження", e)
                 }
                 is HttpStatusException -> {
                     withContext(Dispatchers.Main) {
@@ -100,7 +125,7 @@ class MainActivity : AppCompatActivity() {
                     withContext(Dispatchers.Main) {
                         mainh.text = "Помилка при завантаженні контенту"
                     }
-                    Log.e("MainActivity", "Error while getting content", e)
+                    Log.e("MainActivity", "Помилка при завантаженні контенту", e)
                 }
             }
         }
