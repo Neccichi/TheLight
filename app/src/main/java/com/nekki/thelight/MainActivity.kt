@@ -50,25 +50,37 @@ class MainActivity : AppCompatActivity() {
             val streetsListKyiv = mutableListOf<String>()
 
             for (row in elementsStreetsKyiv) {
-                val streetColumn = row.select("td:nth-child(2)")
-                if (streetColumn.isNotEmpty()) {
-                    val streetName = streetColumn.text()
+                val streetColumnKyiv = row.select("td:nth-child(1)")
+                if (streetColumnKyiv.isNotEmpty()) {
+                    val streetName = streetColumnKyiv.text()
                     streetsListKyiv.add(streetName)
-                    Log.d("Street Name", streetName)
                 }
             }
 
-            Log.d("Streets List", streetsListKyiv.toString())
+            Log.d("Streets Kyiv List", streetsListKyiv.toString())
 
             //Вулиці Дніпра
             val urlStreetsDnipro = "https://dp.locator.ua/ua/list/dnipro/streets/n8/"
             val docStreetsDnipro: Document = withContext(Dispatchers.IO) {
                 Jsoup.connect(urlStreetsDnipro).get()
             }
-            val elementsStreetsDnipro = docStreetsDnipro.select("div.streets-list__name")
+            val elementsStreetsDnipro = docStreetsDnipro.select("tbody tr")
+            val streetsListDnipro = mutableListOf<String>()
+
+            for (row in elementsStreetsDnipro) {
+                val streetColumnDnipro = row.select("td:nth-child(1)")
+                if (streetColumnDnipro.isNotEmpty()) {
+                    val streetName = streetColumnDnipro.text()
+                    streetsListDnipro.add(streetName)
+                }
+            }
+            Log.d("Streets Dnipro List", streetsListDnipro.toString())
+
+
+
+
 
             val text = doc.title()
-
             withContext(Dispatchers.Main) {
                 mainh.text = text
             }
