@@ -24,8 +24,10 @@ class MainActivity : AppCompatActivity() {
         textViewTest = findViewById(R.id.MainTextTest)
         mainh = findViewById(R.id.h1)
         val regionSpinner = findViewById<Spinner>(R.id.regionSpinner)
-        val adapter = ArrayAdapter.createFromResource(this,
-            R.array.regions_array, android.R.layout.simple_spinner_item)
+        val adapter = ArrayAdapter.createFromResource(
+            this,
+            R.array.regions_array, android.R.layout.simple_spinner_item
+        )
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         regionSpinner.adapter = adapter
 
@@ -39,12 +41,35 @@ class MainActivity : AppCompatActivity() {
             val doc: Document = withContext(Dispatchers.IO) {
                 Jsoup.connect("https://kyiv.yasno.com.ua/schedule-turn-off-electricity").get()
             }
-            //Вулиці
+            //Вулиці Києва
+            val urlStreetsKyiv = "https://locator.ua/ua/list/kyiv/streets/n1/"
+            val docStreetsKyiv: Document = withContext(Dispatchers.IO) {
+                Jsoup.connect(urlStreetsKyiv).get()
+            }
+            val elementsStreetsKyiv = docStreetsKyiv.select("tbody tr")
+            val streetsListKyiv = mutableListOf<String>()
 
+            for (row in elementsStreetsKyiv) {
+                val streetColumn = row.select("td:nth-child(2)")
+                if (streetColumn.isNotEmpty()) {
+                    val streetName = streetColumn.text()
+                    streetsListKyiv.add(streetName)
+                    Log.d("Street Name", streetName)
+                }
+            }
+
+            Log.d("Streets List", streetsListKyiv.toString())
+
+            //Вулиці Дніпра
+            val urlStreetsDnipro = "https://dp.locator.ua/ua/list/dnipro/streets/n8/"
+            val docStreetsDnipro: Document = withContext(Dispatchers.IO) {
+                Jsoup.connect(urlStreetsDnipro).get()
+            }
+            val elementsStreetsDnipro = docStreetsDnipro.select("div.streets-list__name")
 
             val text = doc.title()
 
-            if (::mainh.isInitialized) {
+            withContext(Dispatchers.Main) {
                 mainh.text = text
             }
 
@@ -56,12 +81,12 @@ class MainActivity : AppCompatActivity() {
                 }
                 is HttpStatusException -> {
                     withContext(Dispatchers.Main) {
-                        mainh.text = "Ошибка при загрузке контента: ${e.message}"
+                        mainh.text = "Помилка при завантаженні контенту: ${e.message}"
                     }
                 }
                 else -> {
                     withContext(Dispatchers.Main) {
-                        mainh.text = "Ошибка при загрузке контента"
+                        mainh.text = "Помилка при завантаженні контенту"
                     }
                     Log.e("MainActivity", "Error while getting content", e)
                 }

@@ -56,8 +56,16 @@
         android:textSize="18sp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/h1" />
-
-
+    <TextView
+        android:id="@+id/selectStreet"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="24dp"
+        android:text="Oберіть вулицю, бульвар, або проспект:"
+        android:textColor="@color/white"
+        android:textSize="18sp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/selectRegion" />
     <Spinner
         android:id="@+id/regionSpinner"
         android:layout_width="0dp"
@@ -69,6 +77,18 @@
         app:layout_constraintTop_toBottomOf="@+id/selectRegion"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
+
+    <AutoCompleteTextView
+        android:id="@+id/autoStreetText"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="100dp"
+        android:background="@android:color/white"
+        android:popupBackground="@android:color/white"
+        android:textColor="@color/black"
+        app:layout_constraintTop_toBottomOf="@+id/selectStreet"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"/>
 
 
 
