@@ -68,39 +68,43 @@ class MainActivity : AppCompatActivity() {
                     .get()
             }
             //Вулиці Києва
-            val urlStreetsKyiv = "https://locator.ua/ua/list/kyiv/streets/n1/"
-            val docStreetsKyiv: Document = withContext(Dispatchers.IO) {
-                Jsoup.connect(urlStreetsKyiv).get()
-            }
-            val elementsStreetsKyiv = docStreetsKyiv.select("tbody tr")
-            val streetsListKyiv = mutableListOf<String>()
+            val totalPagesKyiv = 20 // Вкажіть кількість сторінок, які потрібно проітерувати
+            for (page in 1..totalPagesKyiv) {
+                val urlStreetsKyiv = "https://locator.ua/ua/list/kyiv/streets/n$page/"
+                val docStreetsKyiv: Document = withContext(Dispatchers.IO) {
+                    Jsoup.connect(urlStreetsKyiv).get()
+                }
+                val elementsStreetsKyiv = docStreetsKyiv.select("tbody tr")
 
-            for (row in elementsStreetsKyiv) {
-                val streetColumnKyiv = row.select("td:nth-child(1)")
-                if (streetColumnKyiv.isNotEmpty()) {
-                    val streetName = streetColumnKyiv.text()
-                    this.streetsListKyiv.add(streetName)
+                for (row in elementsStreetsKyiv) {
+                    val streetColumnKyiv = row.select("td:nth-child(1)")
+                    if (streetColumnKyiv.isNotEmpty()) {
+                        val streetName = streetColumnKyiv.text()
+                        this.streetsListKyiv.add(streetName)
+                    }
                 }
             }
 
             Log.d("Streets Kyiv List", streetsListKyiv.toString())
 
             //Вулиці Дніпра
-            val urlStreetsDnipro = "https://dp.locator.ua/ua/list/dnipro/streets/n8/"
-            val docStreetsDnipro: Document = withContext(Dispatchers.IO) {
-                Jsoup.connect(urlStreetsDnipro).get()
-            }
-            val elementsStreetsDnipro = docStreetsDnipro.select("tbody tr")
-            val streetsListDnipro = mutableListOf<String>()
-
-            for (row in elementsStreetsDnipro) {
-                val streetColumnDnipro = row.select("td:nth-child(1)")
-                if (streetColumnDnipro.isNotEmpty()) {
-                    val streetName = streetColumnDnipro.text()
-                    this.streetsListDnipro.add(streetName)
+            val totalPagesDnipro = 10 // Вкажіть кількість сторінок, які потрібно проітерувати
+            for (page in 1..totalPagesDnipro) {
+                val urlStreetsDnipro = "https://dp.locator.ua/ua/list/dnipro/streets/n$page/"
+                val docStreetsDnipro: Document = withContext(Dispatchers.IO) {
+                    Jsoup.connect(urlStreetsDnipro).get()
                 }
+                val elementsStreetsDnipro = docStreetsDnipro.select("tbody tr")
 
+                for (row in elementsStreetsDnipro) {
+                    val streetColumnDnipro = row.select("td:nth-child(1)")
+                    if (streetColumnDnipro.isNotEmpty()) {
+                        val streetName = streetColumnDnipro.text()
+                        this.streetsListDnipro.add(streetName)
+                    }
+                }
             }
+
             Log.d("Streets Dnipro List", streetsListDnipro.toString())
 
             val headerJson = doc.select("script[type=application/json]").first()?.data()
