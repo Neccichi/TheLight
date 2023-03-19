@@ -1,7 +1,7 @@
 <resources>
     <string name="app_name">TheLight</string>
     <string-array name="regions_array">
-        <item>Дніпро</item>
         <item>Київ</item>
+        <item>Дніпро</item>
     </string-array>
 </resources>

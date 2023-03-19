@@ -38,6 +38,8 @@ class MainActivity : AppCompatActivity() {
 
         coroutineScope.launch {
             getWeb()
+            getWebKyiv()
+            getWebDnipro()
         }
 
         regionSpinner.setOnItemSelectedListener(object : AdapterView.OnItemSelectedListener {
@@ -82,52 +84,6 @@ class MainActivity : AppCompatActivity() {
                     .userAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3")
                     .get()
             }
-            //Вулиці Києва
-            val totalPagesKyiv = 20
-            for (page in 1..totalPagesKyiv) {
-                val urlStreetsKyiv = "https://locator.ua/ua/list/kyiv/streets/n$page/"
-                val docStreetsKyiv: Document = withContext(Dispatchers.IO) {
-                    Jsoup.connect(urlStreetsKyiv).get()
-                }
-                val elementsStreetsKyiv = docStreetsKyiv.select("tbody tr")
-
-                for (row in elementsStreetsKyiv) {
-                    val streetColumnKyiv = row.select("td:nth-child(1)")
-                    val streetLink = row.select("td:nth-child(1) a").attr("href")
-                    if (streetColumnKyiv.isNotEmpty()) {
-                        val streetName = streetColumnKyiv.text()
-                        this.streetsListKyiv.add(streetName)
-                        this.streetsUrlsKyiv.add(streetLink)
-                    }
-                }
-            }
-
-            Log.d("Streets Kyiv List", streetsListKyiv.toString())
-            Log.d("Streets Kyiv URLs", streetsUrlsKyiv.toString())
-
-
-            //Вулиці Дніпра
-            val totalPagesDnipro = 10
-            for (page in 1..totalPagesDnipro) {
-                val urlStreetsDnipro = "https://dp.locator.ua/ua/list/dnipro/streets/n$page/"
-                val docStreetsDnipro: Document = withContext(Dispatchers.IO) {
-                    Jsoup.connect(urlStreetsDnipro).get()
-                }
-                val elementsStreetsDnipro = docStreetsDnipro.select("tbody tr")
-
-                for (row in elementsStreetsDnipro) {
-                    val streetColumnDnipro = row.select("td:nth-child(1)")
-                    val streetLink = row.select("td:nth-child(1) a").attr("href")
-                    if (streetColumnDnipro.isNotEmpty()) {
-                        val streetName = streetColumnDnipro.text()
-                        this.streetsListDnipro.add(streetName)
-                        this.streetsUrlsDnipro.add(streetLink)
-                    }
-                }
-            }
-
-            Log.d("Streets Dnipro List", streetsListDnipro.toString())
-            Log.d("Streets Dnipro URLs", streetsUrlsDnipro.toString())
 
 
         } catch (e: Exception) {
@@ -165,6 +121,54 @@ class MainActivity : AppCompatActivity() {
         )
         autoCompleteHouseNumber.setAdapter(houseNumberAdapter)
     }
+    private suspend fun getWebKyiv() {
+        //Вулиці Києва
+        val urlStreetsKyiv = "https://locator.ua/ua/list/kyiv/streets/n1/"
+        val docStreetsKyiv: Document = withContext(Dispatchers.IO) {
+            Jsoup.connect(urlStreetsKyiv).get()
+        }
+        val elementsStreetsKyiv = docStreetsKyiv.select("tbody tr")
+
+        for (row in elementsStreetsKyiv) {
+            val streetColumnKyiv = row.select("td:nth-child(1)")
+            val streetLink = row.select("td:nth-child(1) a").attr("href")
+            if (streetColumnKyiv.isNotEmpty()) {
+                val streetName = streetColumnKyiv.text()
+                this.streetsListKyiv.add(streetName)
+                this.streetsUrlsKyiv.add(streetLink)
+            }
+        }
+
+
+        Log.d("Streets Kyiv List", streetsListKyiv.toString())
+        Log.d("Streets Kyiv URLs", streetsUrlsKyiv.toString())
+
+
+    }
+    private suspend fun getWebDnipro() {
+        //Вулиці Дніпра
+        val urlStreetsDnipro = "https://dp.locator.ua/ua/list/dnipro/streets/n8/"
+        val docStreetsDnipro: Document = withContext(Dispatchers.IO) {
+            Jsoup.connect(urlStreetsDnipro).get()
+        }
+        val elementsStreetsDnipro = docStreetsDnipro.select("tbody tr")
+
+        for (row in elementsStreetsDnipro) {
+            val streetColumnDnipro = row.select("td:nth-child(1)")
+            val streetLink = row.select("td:nth-child(1) a").attr("href")
+            if (streetColumnDnipro.isNotEmpty()) {
+                val streetName = streetColumnDnipro.text()
+                this.streetsListDnipro.add(streetName)
+                this.streetsUrlsDnipro.add(streetLink)
+            }
+        }
+
+        Log.d("Streets Dnipro List", streetsListDnipro.toString())
+        Log.d("Streets Dnipro URLs", streetsUrlsDnipro.toString())
+
+
+    }
+
 
     override fun onDestroy() {
         super.onDestroy()
