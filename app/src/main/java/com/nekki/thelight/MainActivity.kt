@@ -14,6 +14,7 @@ import org.jsoup.nodes.Document
 class MainActivity : AppCompatActivity() {
     private lateinit var autoCompleteStreetText: AutoCompleteTextView
     private lateinit var autoCompleteHouseNumber: AutoCompleteTextView
+    private lateinit var currentStreetTest: Pair<String, String>
 
     private val job = Job()
     private val coroutineScope = CoroutineScope(Dispatchers.Main + job)
@@ -60,12 +61,19 @@ class MainActivity : AppCompatActivity() {
                 // Do nothing
             }
         })
-        autoCompleteStreetText.setOnItemClickListener { _, _, position, _ ->
+        try {
+            val selectedStreet = autoCompleteStreetText.text.toString()
+            val position = if (currentCity == "kyiv") streetsListKyiv.indexOf(selectedStreet) else streetsListDnipro.indexOf(selectedStreet)
             val selectedUrl = if (currentCity == "kyiv") streetsUrlsKyiv[position] else streetsUrlsDnipro[position]
+            currentStreetTest = Pair(selectedStreet, selectedUrl)
+            Log.d("Selected Street", "Name: $selectedStreet, URL: $selectedUrl")
             coroutineScope.launch {
                 getHouseNumbers(selectedUrl)
             }
+        } catch (e: Exception) {
+            Log.e("Error", "Failed to process street selection: ${e.message}")
         }
+
     }
 
     private fun updateAutoCompleteTextView(streetsList: List<String>) {
