@@ -61,17 +61,19 @@ class MainActivity : AppCompatActivity() {
                 // Do nothing
             }
         })
-        try {
-            val selectedStreet = autoCompleteStreetText.text.toString()
-            val position = if (currentCity == "kyiv") streetsListKyiv.indexOf(selectedStreet) else streetsListDnipro.indexOf(selectedStreet)
-            val selectedUrl = if (currentCity == "kyiv") streetsUrlsKyiv[position] else streetsUrlsDnipro[position]
-            currentStreetTest = Pair(selectedStreet, selectedUrl)
-            Log.d("Selected Street", "Name: $selectedStreet, URL: $selectedUrl")
-            coroutineScope.launch {
-                getHouseNumbers(selectedUrl)
+        autoCompleteStreetText.setOnItemClickListener { _, _, _, _ ->
+            try {
+                val selectedStreet = autoCompleteStreetText.text.toString()
+                val position = if (currentCity == "kyiv") streetsListKyiv.indexOf(selectedStreet) else streetsListDnipro.indexOf(selectedStreet)
+                val selectedUrl = if (currentCity == "kyiv") streetsUrlsKyiv[position] else streetsUrlsDnipro[position]
+                currentStreetTest = Pair(selectedStreet, selectedUrl)
+                Log.d("Selected Street", "Name: $selectedStreet, URL: $selectedUrl")
+                coroutineScope.launch {
+                    getHouseNumbers(selectedUrl)
+                }
+            } catch (e: Exception) {
+                Log.e("Error", "Failed to process street selection: ${e.message}")
             }
-        } catch (e: Exception) {
-            Log.e("Error", "Failed to process street selection: ${e.message}")
         }
 
     }
