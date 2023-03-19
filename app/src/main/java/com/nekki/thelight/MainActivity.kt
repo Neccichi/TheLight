@@ -12,18 +12,21 @@ import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 
 class MainActivity : AppCompatActivity() {
-    private lateinit var mainh: TextView
     private lateinit var autoCompleteStreetText: AutoCompleteTextView
+    private lateinit var autoCompleteHouseNumber: AutoCompleteTextView
 
     private val job = Job()
     private val coroutineScope = CoroutineScope(Dispatchers.Main + job)
     private val streetsListKyiv = mutableListOf<String>()
     private val streetsListDnipro = mutableListOf<String>()
+    private val streetsUrlsKyiv = mutableListOf<String>()
+    private val streetsUrlsDnipro = mutableListOf<String>()
+    private var currentCity = "kyiv"
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        mainh = findViewById(R.id.h1MainText)
         autoCompleteStreetText = findViewById(R.id.autoStreetText)
+        autoCompleteHouseNumber = findViewById(R.id.autoNumber)
 
         val regionSpinner = findViewById<Spinner>(R.id.regionSpinner)
         val adapter = ArrayAdapter.createFromResource(
@@ -40,8 +43,14 @@ class MainActivity : AppCompatActivity() {
         regionSpinner.setOnItemSelectedListener(object : AdapterView.OnItemSelectedListener {
             override fun onItemSelected(parent: AdapterView<*>, view: View, position: Int, id: Long) {
                 when (position) {
-                    0 -> updateAutoCompleteTextView(streetsListKyiv)
-                    1 -> updateAutoCompleteTextView(streetsListDnipro)
+                    0 -> {
+                        updateAutoCompleteTextView(streetsListKyiv)
+                        currentCity = "kyiv"
+                    }
+                    1 -> {
+                        updateAutoCompleteTextView(streetsListDnipro)
+                        currentCity = "dnipro"
+                    }
                 }
             }
 
@@ -49,6 +58,12 @@ class MainActivity : AppCompatActivity() {
                 // Do nothing
             }
         })
+        autoCompleteStreetText.setOnItemClickListener { _, _, position, _ ->
+            val selectedUrl = if (currentCity == "kyiv") streetsUrlsKyiv[position] else streetsUrlsDnipro[position]
+            coroutineScope.launch {
+                getHouseNumbers(selectedUrl)
+            }
+        }
     }
 
     private fun updateAutoCompleteTextView(streetsList: List<String>) {
@@ -68,7 +83,7 @@ class MainActivity : AppCompatActivity() {
                     .get()
             }
             //Вулиці Києва
-            val totalPagesKyiv = 20 // Вкажіть кількість сторінок, які потрібно проітерувати
+            val totalPagesKyiv = 20
             for (page in 1..totalPagesKyiv) {
                 val urlStreetsKyiv = "https://locator.ua/ua/list/kyiv/streets/n$page/"
                 val docStreetsKyiv: Document = withContext(Dispatchers.IO) {
@@ -78,17 +93,21 @@ class MainActivity : AppCompatActivity() {
 
                 for (row in elementsStreetsKyiv) {
                     val streetColumnKyiv = row.select("td:nth-child(1)")
+                    val streetLink = row.select("td:nth-child(1) a").attr("href")
                     if (streetColumnKyiv.isNotEmpty()) {
                         val streetName = streetColumnKyiv.text()
                         this.streetsListKyiv.add(streetName)
+                        this.streetsUrlsKyiv.add(streetLink)
                     }
                 }
             }
 
             Log.d("Streets Kyiv List", streetsListKyiv.toString())
+            Log.d("Streets Kyiv URLs", streetsUrlsKyiv.toString())
+
 
             //Вулиці Дніпра
-            val totalPagesDnipro = 10 // Вкажіть кількість сторінок, які потрібно проітерувати
+            val totalPagesDnipro = 10
             for (page in 1..totalPagesDnipro) {
                 val urlStreetsDnipro = "https://dp.locator.ua/ua/list/dnipro/streets/n$page/"
                 val docStreetsDnipro: Document = withContext(Dispatchers.IO) {
@@ -98,41 +117,53 @@ class MainActivity : AppCompatActivity() {
 
                 for (row in elementsStreetsDnipro) {
                     val streetColumnDnipro = row.select("td:nth-child(1)")
+                    val streetLink = row.select("td:nth-child(1) a").attr("href")
                     if (streetColumnDnipro.isNotEmpty()) {
                         val streetName = streetColumnDnipro.text()
                         this.streetsListDnipro.add(streetName)
+                        this.streetsUrlsDnipro.add(streetLink)
                     }
                 }
             }
 
             Log.d("Streets Dnipro List", streetsListDnipro.toString())
-
-            val headerJson = doc.select("script[type=application/json]").first()?.data()
-            val headerElement = JSONObject(headerJson).getJSONArray("pageProps").getJSONObject(0).getString("title")
-            withContext(Dispatchers.Main) {
-                mainh.text = headerElement
-            }
+            Log.d("Streets Dnipro URLs", streetsUrlsDnipro.toString())
 
 
-            Log.d("MainActivity", "Title: $headerElement")
         } catch (e: Exception) {
-            when (e) {
-                is CancellationException -> {
-                    Log.e("MainActivity", "Відміна завантаження", e)
-                }
-                is HttpStatusException -> {
-                    withContext(Dispatchers.Main) {
-                        mainh.text = "Помилка при завантаженні контенту: ${e.message}"
-                    }
-                }
-                else -> {
-                    withContext(Dispatchers.Main) {
-                        mainh.text = "Помилка при завантаженні контенту"
-                    }
-                    Log.e("MainActivity", "Помилка при завантаженні контенту", e)
+        }
+    }
+    private suspend fun getHouseNumbers(url: String) {
+        try {
+            val houseNumbersDoc: Document = withContext(Dispatchers.IO) {
+                Jsoup.connect(url).get()
+            }
+
+            val houseNumbersElements = houseNumbersDoc.select("tbody tr")
+            val houseNumbersList = mutableListOf<String>()
+
+            for (row in houseNumbersElements) {
+                val houseNumberColumn = row.select("td:nth-child(1)")
+                if (houseNumberColumn.isNotEmpty()) {
+                    val houseNumber = houseNumberColumn.text()
+                    houseNumbersList.add(houseNumber)
                 }
             }
+
+            Log.d("House Numbers List", houseNumbersList.toString())
+            updateAutoCompleteHouseNumber(houseNumbersList)
+
+        } catch (e: HttpStatusException) {
+            Log.e("Error", "Failed to load house numbers: ${e.message}")
         }
+    }
+    private fun updateAutoCompleteHouseNumber(houseNumbersList: List<String>) {
+        val houseNumberAdapter = ArrayAdapter(
+            this,
+            android.R.layout.simple_dropdown_item_1line,
+            houseNumbersList
+        )
+        autoCompleteHouseNumber.setAdapter(houseNumberAdapter)
     }
 
     override fun onDestroy() {
