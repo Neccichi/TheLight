@@ -69,7 +69,7 @@ class MainActivity : AppCompatActivity() {
                 val selectedUrl = if (currentCity == "kyiv") streetsUrlsKyiv[position] else streetsUrlsDnipro[position]
                 val decodedUrl = URLDecoder.decode(selectedUrl, "UTF-8")
                 currentStreetTest = Pair(selectedStreet, decodedUrl)
-                Log.d("Selected Street", "Name: $selectedStreet, URL: $decodedUrl")
+                Log.d("Selected Street", "Name: $selectedStreet, URL: $selectedUrl")
                 coroutineScope.launch {
                     getHouseNumbers(decodedUrl)
                 }
