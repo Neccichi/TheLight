@@ -10,6 +10,7 @@ import org.json.JSONObject
 import org.jsoup.HttpStatusException
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
+import java.net.URLDecoder
 
 class MainActivity : AppCompatActivity() {
     private lateinit var autoCompleteStreetText: AutoCompleteTextView
@@ -66,10 +67,11 @@ class MainActivity : AppCompatActivity() {
                 val selectedStreet = autoCompleteStreetText.text.toString()
                 val position = if (currentCity == "kyiv") streetsListKyiv.indexOf(selectedStreet) else streetsListDnipro.indexOf(selectedStreet)
                 val selectedUrl = if (currentCity == "kyiv") streetsUrlsKyiv[position] else streetsUrlsDnipro[position]
-                currentStreetTest = Pair(selectedStreet, selectedUrl)
-                Log.d("Selected Street", "Name: $selectedStreet, URL: $selectedUrl")
+                val decodedUrl = URLDecoder.decode(selectedUrl, "UTF-8")
+                currentStreetTest = Pair(selectedStreet, decodedUrl)
+
                 coroutineScope.launch {
-                    getHouseNumbers(selectedUrl)
+                    getHouseNumbers(decodedUrl)
                 }
             } catch (e: Exception) {
                 Log.e("Error", "Failed to process street selection: ${e.message}")
@@ -105,15 +107,12 @@ class MainActivity : AppCompatActivity() {
                 Jsoup.connect(url).get()
             }
 
-            val houseNumbersElements = houseNumbersDoc.select("tbody tr")
+            val houseNumbersElements = houseNumbersDoc.select("a[href*=https://locator.ua/ua/b/]")
             val houseNumbersList = mutableListOf<String>()
 
-            for (row in houseNumbersElements) {
-                val houseNumberColumn = row.select("td:nth-child(1)")
-                if (houseNumberColumn.isNotEmpty()) {
-                    val houseNumber = houseNumberColumn.text()
-                    houseNumbersList.add(houseNumber)
-                }
+            for (element in houseNumbersElements) {
+                val houseNumber = element.text()
+                houseNumbersList.add(houseNumber)
             }
 
             Log.d("House Numbers List", houseNumbersList.toString())
@@ -123,6 +122,7 @@ class MainActivity : AppCompatActivity() {
             Log.e("Error", "Failed to load house numbers: ${e.message}")
         }
     }
+
     private fun updateAutoCompleteHouseNumber(houseNumbersList: List<String>) {
         val houseNumberAdapter = ArrayAdapter(
             this,
