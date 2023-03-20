@@ -6,7 +6,6 @@ import android.util.Log
 import android.view.View
 import android.widget.*
 import kotlinx.coroutines.*
-import org.json.JSONObject
 import org.jsoup.HttpStatusException
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
