@@ -11,6 +11,8 @@ import org.jsoup.HttpStatusException
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import java.net.URLDecoder
+import android.content.Intent
+import android.widget.Toast
 
 class MainActivity : AppCompatActivity() {
     private lateinit var autoCompleteStreetText: AutoCompleteTextView
@@ -77,6 +79,14 @@ class MainActivity : AppCompatActivity() {
                 }
             } catch (e: Exception) {
                 Log.e("Error", "Failed to process street selection: ${e.message}")
+            }
+        }
+        takeResultBtn.setOnClickListener {
+            if (validateInputs()) {
+                val intent = Intent(this, Result::class.java)
+                startActivity(intent)
+            } else {
+                Toast.makeText(this, "Будь ласка, виберіть місто, вулицю та номер будинку.", Toast.LENGTH_LONG).show()
             }
         }
 
@@ -180,7 +190,13 @@ class MainActivity : AppCompatActivity() {
 
 
     }
+    private fun validateInputs(): Boolean {
+        val selectedCity = currentCity.isNotEmpty()
+        val selectedStreet = autoCompleteStreetText.text.isNotEmpty()
+        val selectedHouseNumber = autoCompleteHouseNumber.text.isNotEmpty()
 
+        return selectedCity && selectedStreet && selectedHouseNumber
+    }
 
     override fun onDestroy() {
         super.onDestroy()
