@@ -84,11 +84,13 @@ class MainActivity : AppCompatActivity() {
         takeResultBtn.setOnClickListener {
             if (validateInputs()) {
                 val intent = Intent(this, Result::class.java)
+                intent.putExtra("resultOfChoice", resultOfChoice)
                 startActivity(intent)
             } else {
                 Toast.makeText(this, "Будь ласка, виберіть місто, вулицю та номер будинку.", Toast.LENGTH_LONG).show()
             }
         }
+
 
     }
 
