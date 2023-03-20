@@ -16,6 +16,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var autoCompleteStreetText: AutoCompleteTextView
     private lateinit var autoCompleteHouseNumber: AutoCompleteTextView
     private lateinit var currentStreetTest: Pair<String, String>
+    private lateinit var takeResultBtn: Button
 
     private val job = Job()
     private val coroutineScope = CoroutineScope(Dispatchers.Main + job)
@@ -29,6 +30,7 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
         autoCompleteStreetText = findViewById(R.id.autoStreetText)
         autoCompleteHouseNumber = findViewById(R.id.autoNumber)
+        takeResultBtn = findViewById(R.id.ResultBtn)
 
         val regionSpinner = findViewById<Spinner>(R.id.regionSpinner)
         val adapter = ArrayAdapter.createFromResource(
