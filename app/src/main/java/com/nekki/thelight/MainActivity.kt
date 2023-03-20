@@ -18,6 +18,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var autoCompleteHouseNumber: AutoCompleteTextView
     private lateinit var currentStreetTest: Pair<String, String>
     private lateinit var takeResultBtn: Button
+    private lateinit var resultOfChoice: Pair<String, String>
 
     private val job = Job()
     private val coroutineScope = CoroutineScope(Dispatchers.Main + job)
@@ -154,7 +155,7 @@ class MainActivity : AppCompatActivity() {
             val streetColumnKyiv = row.select("td:nth-child(1)")
             val streetLink = row.select("td:nth-child(1) a").attr("href")
             if (streetColumnKyiv.isNotEmpty()) {
-                val streetName = streetColumnKyiv.text()
+                val streetName = streetColumnKyiv.text().substringBefore(" вулиця").substringBefore(" бульвар").substringBefore(" проспект").substringBefore(" площа").substringBefore(" провулок")
                 this.streetsListKyiv.add(streetName)
                 this.streetsUrlsKyiv.add(streetLink)
             }
@@ -178,7 +179,7 @@ class MainActivity : AppCompatActivity() {
             val streetColumnDnipro = row.select("td:nth-child(1)")
             val streetLink = row.select("td:nth-child(1) a").attr("href")
             if (streetColumnDnipro.isNotEmpty()) {
-                val streetName = streetColumnDnipro.text()
+                val streetName = streetColumnDnipro.text().substringBefore(" вулиця").substringBefore(" бульвар").substringBefore(" проспект").substringBefore(" площа").substringBefore(" провулок")
                 this.streetsListDnipro.add(streetName)
                 this.streetsUrlsDnipro.add(streetLink)
             }
@@ -194,7 +195,12 @@ class MainActivity : AppCompatActivity() {
         val selectedStreet = autoCompleteStreetText.text.isNotEmpty()
         val selectedHouseNumber = autoCompleteHouseNumber.text.isNotEmpty()
 
-        return selectedCity && selectedStreet && selectedHouseNumber
+        if (selectedCity && selectedStreet && selectedHouseNumber) {
+            resultOfChoice = Pair(autoCompleteStreetText.text.toString(), autoCompleteHouseNumber.text.toString())
+            Log.d("Result of Choice", "Street: ${resultOfChoice.first}, House Number: ${resultOfChoice.second}")
+            return true
+        }
+        return false
     }
 
     override fun onDestroy() {
